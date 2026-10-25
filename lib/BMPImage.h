@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
-#include <fstream>
+#include <string>
+#include <vector>
 
 struct Pixel {
     uint8_t blue = 0;
@@ -9,5 +10,20 @@ struct Pixel {
 };
 
 class BMPImage {
-    bool read_image(const std::string& filename);
+public:
+    BMPImage() = default;
+    
+    bool read(const std::string& file_name);
+
+    bool save(const std::string& file_name);
+
+    int getWidth() const;
+    int getHeight() const;
+    const std::vector<Pixel>& getPixels() const;
+
+private:
+    int width = 0;
+    int height = 0;
+    
+    std::vector<Pixel> pixels;
 };
