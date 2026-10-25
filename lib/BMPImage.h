@@ -4,9 +4,9 @@
 #include <vector>
 
 struct Pixel {
-    uint8_t blue = 0;
-    uint8_t green = 0;
-    uint8_t red = 0;
+    std::uint8_t blue = 0;
+    std::uint8_t green = 0;
+    std::uint8_t red = 0;
 };
 
 class BMPImage {
