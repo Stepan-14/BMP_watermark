@@ -6,7 +6,7 @@ bool BMPImage::read(const std::string& file_name) {
     std::ifstream file(file_name, std::ios::binary);
 
     if (!file.is_open()) {                                                           // no such file exists or failed to open
-        std::cerr << "Не удалось открыть файл: " << file_name << std::endl;
+        // std::cerr << "Не удалось открыть файл: " << file_name << std::endl;
         return false;
     }
 
@@ -14,7 +14,7 @@ bool BMPImage::read(const std::string& file_name) {
     file.read(reinterpret_cast<char*>(header), 54);
 
     if (header[0] != 'B' || header[1] != 'M') {                                      // incorrect file type
-        std::cerr << "Некорректный формат файла. Требуется .bmp файл" << std::endl;
+        // std::cerr << "Некорректный формат файла. Требуется .bmp файл" << std::endl;
         return false;
     }
 
@@ -51,6 +51,54 @@ bool BMPImage::read(const std::string& file_name) {
 }
 
 bool BMPImage::save(const std::string& file_name) {
+    std::ofstream file(file_name, std::ios::binary);
+    
+    if (!file.is_open()) {
+        return false;
+    }
+
+    // counting real sizes (with padding)
+    int padding = (4 - (width * 3) % 4) % 4;
+    int sizeImage = (width * 3 + padding) * height;                                  // size of pixel data
+    int fileSize = 54 + sizeImage;                                                   // full size of file with header
+
+    // writing the header that is needed
+    uint8_t header[54] = {
+        'B', 'M',                                                                    // 0-1: type of file: .bmp
+        0, 0, 0, 0,                                                                  // 2-5: size of file (is written below)
+        0, 0, 0, 0,                                                                  // 6-9: reserved
+        54, 0, 0, 0,                                                                 // 10-13: bytes until pixel information
+        40, 0, 0, 0,                                                                 // 14-17: size of info-header
+        0, 0, 0, 0,                                                                  // 18-21: width (is written below)
+        0, 0, 0, 0,                                                                  // 22-25: height (is written below)
+        1, 0,                                                                        // 26-27: color planes (useless)
+        24, 0,                                                                       // 28-29: bitsPerPixel (24: blue green red)
+        0, 0, 0, 0,                                                                  // 30-33: compression (0 = none)
+        0, 0, 0, 0,                                                                  // 34-37: size of image (is written below)
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0                               // 38-53: useless zeros
+    };
+
+    // writing values into header bytes
+    *(int*)&header[2]  = fileSize;
+    *(int*)&header[18] = width;
+    *(int*)&header[22] = height;
+    *(int*)&header[34] = sizeImage;
+
+    // write ready header into file
+    file.write(reinterpret_cast<char*>(header), 54);
+
+    uint8_t paddingBytes[3] = {0, 0, 0};                                             // buffer for paddings
+    
+    for (int y = 0; y < height; ++y) {
+        // write a line of pure pixels values
+        file.write(reinterpret_cast<const char*>(&pixels[y * width]), width * sizeof(Pixel));
+
+        // write to the same line padding zeros if needed
+        file.write(reinterpret_cast<const char*>(paddingBytes), padding);
+    }
+
+    file.close();
+
     return true;
 }
 
