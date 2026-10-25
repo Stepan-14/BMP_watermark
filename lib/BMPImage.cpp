@@ -1,0 +1,2 @@
+#include "BMPImage.h"
+
