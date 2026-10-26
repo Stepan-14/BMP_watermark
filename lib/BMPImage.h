@@ -4,10 +4,18 @@
 #include <vector>
 
 struct Pixel {
-    uint8_t blue = 0;
-    uint8_t green = 0;
-    uint8_t red = 0;
+    std::uint8_t blue = 0;
+    std::uint8_t green = 0;
+    std::uint8_t red = 0;
 };
+
+struct WatermarkConfig {
+    int posX = 0;                                                                    // cordinate x for watermark
+    int posY = 0;                                                                    // cordinate y for watermark
+    int alpha = 50;                                                                  // percentage of original color (or of watermark color - doesn't matter)
+};
+
+WatermarkConfig loadConfig(const std::string& ini_path);
 
 class BMPImage {
 public:
@@ -17,9 +25,11 @@ public:
 
     bool save(const std::string& file_name);
 
+    bool applyWatermark(const BMPImage& watermark_file, const WatermarkConfig& config);
+
     int getWidth() const;
     int getHeight() const;
-    const std::vector<Pixel>& getPixels() const;
+    std::vector<Pixel>& getPixels();
 
 private:
     int width = 0;
