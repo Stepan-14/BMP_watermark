@@ -19,7 +19,7 @@ public:
 
     int getWidth() const;
     int getHeight() const;
-    const std::vector<Pixel>& getPixels() const;
+    std::vector<Pixel>& getPixels();
 
 private:
     int width = 0;

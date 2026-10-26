@@ -6,7 +6,6 @@ bool BMPImage::read(const std::string& file_name) {
     std::ifstream file(file_name, std::ios::binary);
 
     if (!file.is_open()) {                                                           // no such file exists or failed to open
-        // std::cerr << "Не удалось открыть файл: " << file_name << std::endl;
         return false;
     }
 
@@ -14,7 +13,6 @@ bool BMPImage::read(const std::string& file_name) {
     file.read(reinterpret_cast<char*>(header), 54);
 
     if (header[0] != 'B' || header[1] != 'M') {                                      // incorrect file type
-        // std::cerr << "Некорректный формат файла. Требуется .bmp файл" << std::endl;
         return false;
     }
 
@@ -59,8 +57,8 @@ bool BMPImage::save(const std::string& file_name) {
 
     // counting real sizes (with padding)
     int padding = (4 - (width * 3) % 4) % 4;
-    int sizeImage = (width * 3 + padding) * height;                                  // size of pixel data
-    int fileSize = 54 + sizeImage;                                                   // full size of file with header
+    int size_image = (width * 3 + padding) * height;                                 // size of pixel data
+    int file_size = 54 + size_image;                                                 // full size of file with header
 
     // writing the header that is needed
     uint8_t header[54] = {
@@ -79,10 +77,10 @@ bool BMPImage::save(const std::string& file_name) {
     };
 
     // writing values into header bytes
-    *(int*)&header[2]  = fileSize;
-    *(int*)&header[18] = width;
-    *(int*)&header[22] = height;
-    *(int*)&header[34] = sizeImage;
+    *reinterpret_cast<int*>(&header[2])  = file_size;
+    *reinterpret_cast<int*>(&header[18]) = width;
+    *reinterpret_cast<int*>(&header[22]) = height;
+    *reinterpret_cast<int*>(&header[34]) = size_image;
 
     // write ready header into file
     file.write(reinterpret_cast<char*>(header), 54);
@@ -90,18 +88,19 @@ bool BMPImage::save(const std::string& file_name) {
     uint8_t paddingBytes[3] = {0, 0, 0};                                             // buffer for paddings
     
     for (int y = 0; y < height; ++y) {
+        int sourceY = height - 1 - y;
+    
         // write a line of pure pixels values
-        file.write(reinterpret_cast<const char*>(&pixels[y * width]), width * sizeof(Pixel));
+        file.write(reinterpret_cast<const char*>(&pixels[sourceY * width]), width * sizeof(Pixel));
 
         // write to the same line padding zeros if needed
         file.write(reinterpret_cast<const char*>(paddingBytes), padding);
     }
 
     file.close();
-
     return true;
 }
 
 int BMPImage::getWidth() const { return width; }
 int BMPImage::getHeight() const { return height; }
-const std::vector<Pixel>& BMPImage::getPixels() const { return pixels; }
+std::vector<Pixel>& BMPImage::getPixels() { return pixels; }
