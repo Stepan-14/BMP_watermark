@@ -25,7 +25,7 @@ public:
 
     bool save(const std::string& file_name);
 
-    bool applyWatermark(const BMPImage& watermark_file, const WatermarkConfig& config);
+    bool applyWatermark(const BMPImage& original, const BMPImage& watermark_file, const std::string& ini_path, BMPImage& resultImage);
 
     int getWidth() const;
     int getHeight() const;
