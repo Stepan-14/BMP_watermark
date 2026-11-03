@@ -2,26 +2,19 @@
 #include "BMPImage.h"
 
 int main() {
+    const std::string ini_path = "input/settings.ini";
+    const std::string watermark_name = "input/logo.bmp";
+    const std::string input_name = "input/Car.bmp";
+    const std::string output_name = "output/output.bmp";
+
     BMPImage image;
-    image.read("input/Car.bmp");
+    image.read(input_name);
     
     BMPImage watermark;
-    // image.read("input/<file_name>.bmp");
-    
+    watermark.read(watermark_name);
 
-    // start of the test program that inverts colors
-    std::vector<Pixel>& allPixels = image.getPixels();
-    
-    for (size_t i = 0; i < allPixels.size(); ++i) {
-        allPixels[i].blue  = 255 - allPixels[i].blue;                                // invert blue
-        allPixels[i].red   = 255 - allPixels[i].red;                                 // invert red
-        allPixels[i].green = 255 - allPixels[i].green;                               // invert green
+    BMPImage resultImage;
+    if (image.applyWatermark(watermark, ini_path, resultImage, output_name)) {
+        std::cout << "Recording and Saving were ended correctly!\n";
     }
-
-    if (image.save("output/output.bmp")) {
-        std::cout << "Измененный файл успешно сохранен" << std::endl;
-    } else {
-        std::cout << "Ошибка при сохранении файла" << std::endl;
-    }
-    // finish of the test program
 }

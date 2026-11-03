@@ -3,7 +3,6 @@
 #include <iostream>
 #include <string>
 #include <charconv>
-
 //bmpclass.h
 
 bool BMPImage::read(const std::string& file_name) {
@@ -166,19 +165,18 @@ std::uint8_t blend_channel(std::uint8_t orig, std::uint8_t mark, int alpha) {
     return new_color;
 }
 
-bool BMPImage::applyWatermark(const BMPImage& original, const BMPImage& watermark_file, const std::string& ini_path, BMPImage& resultImage) {
+bool BMPImage::applyWatermark(const BMPImage& watermark_file, const std::string& ini_path, BMPImage& resultImage, const std::string& output_path) {
+    int markWidth = watermark_file.getWidth(), markHeight = watermark_file.getHeight();
+    int originalWidth = this->getWidth(), originalHeight = this->getHeight();
+    
     WatermarkConfig curConfig;
-    if (!loadConfig(ini_path, curConfig)) {
-        std::cerr << "Ошибка чтения файла .ini\n";
-        return false;
-    }
-    if (curConfig.posX < 0 || curConfig.posY < 0 || (0 > curConfig.alpha || curConfig.alpha > 100)) {
+    if (!loadConfig(ini_path, curConfig)) return false;
+    if ((curConfig.posX < 0 || curConfig.posX > originalWidth)
+    || (curConfig.posY < 0 || curConfig.posY > originalHeight)
+    || (0 > curConfig.alpha || curConfig.alpha > 100)) {
         std::cerr << "Некорректные данные для конфигурации\n";
         return false;
     }
-
-    int markWidth = watermark_file.getWidth(), markHeight = watermark_file.getHeight();
-    int originalWidth = original.getWidth(), originalHeight = original.getHeight();
 
     resultImage.width = originalWidth;
     resultImage.height = originalHeight;
@@ -186,7 +184,7 @@ bool BMPImage::applyWatermark(const BMPImage& original, const BMPImage& watermar
     // копирование оригинального изображения
     resultImage.pixels.resize(originalHeight * originalWidth);
     for (int i = 0; i < originalHeight * originalWidth; ++i) {
-        resultImage.pixels[i] = original.pixels[i]; 
+        resultImage.pixels[i] = this->pixels[i]; 
     }
 
     for (int cy = 0; cy < markHeight; ++cy) {
@@ -195,16 +193,16 @@ bool BMPImage::applyWatermark(const BMPImage& original, const BMPImage& watermar
             int posy = curConfig.posY + cy;
 
             if (posx < originalWidth && posy < originalHeight) {
-                // выбор нужного пикселя в векторе original и watermark_file для каждого канала
-                std::uint8_t orig_channelB = original.pixels[posy * originalWidth + posx].blue; 
+                // выбор нужного пикселя в векторе this и watermark_file для каждого канала
+                std::uint8_t orig_channelB = this->pixels[posy * originalWidth + posx].blue; 
                 std::uint8_t mark_channelB = watermark_file.pixels[cy * markWidth + cx].blue;
                 std::uint8_t new_channelB = blend_channel(orig_channelB, mark_channelB, curConfig.alpha);
 
-                std::uint8_t orig_channelG = original.pixels[posy * originalWidth + posx].green;
+                std::uint8_t orig_channelG = this->pixels[posy * originalWidth + posx].green;
                 std::uint8_t mark_channelG = watermark_file.pixels[cy * markWidth + cx].green;
                 std::uint8_t new_channelG = blend_channel(orig_channelG, mark_channelG, curConfig.alpha);
 
-                std::uint8_t orig_channelR = original.pixels[posy * originalWidth + posx].red;
+                std::uint8_t orig_channelR = this->pixels[posy * originalWidth + posx].red;
                 std::uint8_t mark_channelR = watermark_file.pixels[cy * markWidth + cx].red;
                 std::uint8_t new_channelR = blend_channel(orig_channelR, mark_channelR, curConfig.alpha);
 
@@ -215,6 +213,8 @@ bool BMPImage::applyWatermark(const BMPImage& original, const BMPImage& watermar
             }
         }
     }
+
+    resultImage.save(output_path);
 
     return true;
 }
